@@ -1,3 +1,5 @@
+#Ejecutar con privilegios elevados
+
 $certificates = @(
     "https://www.digicert.com/CACerts/DigiCertGlobalRootG2.crt",
     "https://www.digicert.com/CACerts/DigiCertGlobalRootCA.crt",
