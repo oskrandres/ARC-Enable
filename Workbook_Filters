@@ -1,0 +1,234 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "# **_ Azure Windows Benefits_**"
+      },
+      "name": "text - 0"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "parameters": [
+          {
+            "id": "46036942-bb4a-43b6-a067-8f8329e1c889",
+            "version": "KqlParameterItem/1.0",
+            "name": "BenefitsActivated",
+            "label": "Benefits Activated",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "resources\r\n| where type =~ 'microsoft.hybridcompute/machines'\r\n| extend CloudProvider = properties.cloudMetadata.provider,\r\ndatacenter = iif(isnull(tags.Datacenter), '', tags.Datacenter),\r\nstate = properties.status,\r\ncores = properties.detectedProperties.coreCount\r\n| extend os = properties.osName\r\n| extend operatingSystem = case(\r\nos =~ 'windows', 'Windows',\r\nos =~ 'linux', 'Linux',\r\n'')\r\n| extend licenseProfile = properties.licenseProfile\r\n| extend \r\nsoftwareAssurance = licenseProfile.softwareAssurance,\r\nsoftwareAssuranceCustomer = licenseProfile.softwareAssurance.softwareAssuranceCustomer,\r\nproductSubscriptionStatus = tostring(licenseProfile.productProfile.subscriptionStatus),\r\nlicenseChannel = tostring(licenseProfile.licenseChannel),\r\nlicenseStatus = tostring(licenseProfile.licenseStatus)\r\n| where operatingSystem == 'Windows'\r\n| extend benefitsStatus = case(\r\n    softwareAssuranceCustomer == true, \"Activated\",\r\n    (licenseStatus =~ \"Licensed\" and licenseChannel =~ \"PGS:TB\") or productSubscriptionStatus =~ \"Enabled\", \"Activated via Pay-as-you-go\",\r\n    isnull(softwareAssurance) or isnull(softwareAssuranceCustomer) or softwareAssuranceCustomer == false, \"Not activated\",\r\n    \"Not activated\")\r\n| distinct benefitsStatus",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 86400000
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "22d9788a-52ba-4cdb-aa98-e5b17885f5bf",
+            "version": "KqlParameterItem/1.0",
+            "name": "State",
+            "type": 2,
+            "isRequired": true,
+            "isGlobal": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "resources\r\n| where type =~ 'microsoft.hybridcompute/machines'\r\n| extend state = tostring(properties.status)\r\n| distinct state",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ]
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": [
+              "value::all"
+            ]
+          },
+          {
+            "id": "70b4f221-f01b-4bd0-bf4a-ab22fd9e596b",
+            "version": "KqlParameterItem/1.0",
+            "name": "CloudProvider",
+            "label": "Cloud Provider",
+            "type": 2,
+            "isRequired": true,
+            "multiSelect": true,
+            "quote": "'",
+            "delimiter": ",",
+            "query": "resources\r\n| where type =~ 'microsoft.hybridcompute/machines'\r\n| extend CloudProvider = tostring(properties.cloudMetadata.provider)\r\n| distinct CloudProvider",
+            "crossComponentResources": [
+              "value::tenant"
+            ],
+            "typeSettings": {
+              "additionalResourceOptions": [
+                "value::all"
+              ]
+            },
+            "queryType": 1,
+            "resourceType": "microsoft.resources/tenants",
+            "value": [
+              "N/A"
+            ]
+          }
+        ],
+        "style": "pills",
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants"
+      },
+      "customWidth": "60",
+      "name": "parameters - 2"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type =~ 'microsoft.hybridcompute/machines'\r\n| extend CloudProvider = properties.cloudMetadata.provider,\r\ndatacenter = iif(isnull(tags.Datacenter), '', tags.Datacenter),\r\nstate = tostring(properties.status),\r\ncores = toint(properties.detectedProperties.coreCount)\r\n| extend os = properties.osName\r\n| extend operatingSystem = case(\r\nos =~ 'windows', 'Windows',\r\nos =~ 'linux', 'Linux',\r\n'')\r\n| extend licenseProfile = properties.licenseProfile\r\n| extend \r\nsoftwareAssurance = licenseProfile.softwareAssurance,\r\nsoftwareAssuranceCustomer = licenseProfile.softwareAssurance.softwareAssuranceCustomer,\r\nproductSubscriptionStatus = tostring(licenseProfile.productProfile.subscriptionStatus),\r\nlicenseChannel = tostring(licenseProfile.licenseChannel),\r\nlicenseStatus = tostring(licenseProfile.licenseStatus)\r\n| where operatingSystem == 'Windows'\r\n| join kind=inner (\r\n    resourcecontainers\r\n    | where type == 'microsoft.resources/subscriptions'\r\n    | project subscriptionId, subscriptionName = name)\r\n    on subscriptionId\r\n| extend benefitsStatus = case(\r\n    softwareAssuranceCustomer == true, \"Activated\",\r\n    (licenseStatus =~ \"Licensed\" and licenseChannel =~ \"PGS:TB\") or productSubscriptionStatus =~ \"Enabled\", \"Activated via Pay-as-you-go\",\r\n    isnull(softwareAssurance) or isnull(softwareAssuranceCustomer) or softwareAssuranceCustomer == false, \"Not activated\",\r\n    \"Not activated\")\r\n| where benefitsStatus in ({BenefitsActivated}) and state in ({State}) and CloudProvider in ({CloudProvider})\r\n| project id,state, cores, benefitsStatus,CloudProvider,subscriptionName,resourceGroup,datacenter,operatingSystem,type,location,subscriptionId,tags\r\n| summarize total_cores = sum(cores)",
+        "size": 4,
+        "title": "Total Cores",
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "visualization": "tiles",
+        "tileSettings": {
+          "titleContent": {
+            "formatter": 1
+          },
+          "rightContent": {
+            "columnMatch": "total_cores",
+            "formatter": 12,
+            "formatOptions": {
+              "palette": "blue"
+            }
+          },
+          "showBorder": false
+        },
+        "graphSettings": {
+          "type": 0
+        }
+      },
+      "customWidth": "40",
+      "name": "TotalCores"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "resources\r\n| where type =~ 'microsoft.hybridcompute/machines'\r\n| extend CloudProvider = properties.cloudMetadata.provider,\r\ndatacenter = iif(isnull(tags.Datacenter), '', tags.Datacenter),\r\nstate = tostring(properties.status),\r\ncores = properties.detectedProperties.coreCount\r\n| extend os = properties.osName\r\n| extend operatingSystem = case(\r\nos =~ 'windows', 'Windows',\r\nos =~ 'linux', 'Linux',\r\n'')\r\n| extend licenseProfile = properties.licenseProfile\r\n| extend \r\nsoftwareAssurance = licenseProfile.softwareAssurance,\r\nsoftwareAssuranceCustomer = licenseProfile.softwareAssurance.softwareAssuranceCustomer,\r\nproductSubscriptionStatus = tostring(licenseProfile.productProfile.subscriptionStatus),\r\nlicenseChannel = tostring(licenseProfile.licenseChannel),\r\nlicenseStatus = tostring(licenseProfile.licenseStatus)\r\n| where operatingSystem == 'Windows'\r\n| join kind=inner (\r\n    resourcecontainers\r\n    | where type == 'microsoft.resources/subscriptions'\r\n    | project subscriptionId, subscriptionName = name)\r\n    on subscriptionId\r\n| extend benefitsStatus = case(\r\n    softwareAssuranceCustomer == true, \"Activated\",\r\n    (licenseStatus =~ \"Licensed\" and licenseChannel =~ \"PGS:TB\") or productSubscriptionStatus =~ \"Enabled\", \"Activated via Pay-as-you-go\",\r\n    isnull(softwareAssurance) or isnull(softwareAssuranceCustomer) or softwareAssuranceCustomer == false, \"Not activated\",\r\n    \"Not activated\")\r\n| where benefitsStatus in ({BenefitsActivated}) and state in ({State}) and CloudProvider in ({CloudProvider})\r\n| project id,state, cores, benefitsStatus,CloudProvider,subscriptionName,resourceGroup,datacenter,operatingSystem,location,subscriptionId,tags",
+        "size": 2,
+        "showExportToExcel": true,
+        "queryType": 1,
+        "resourceType": "microsoft.resources/tenants",
+        "crossComponentResources": [
+          "value::tenant"
+        ],
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "cores",
+              "formatter": 0,
+              "formatOptions": {
+                "aggregation": "Sum"
+              }
+            },
+            {
+              "columnMatch": "datacenter",
+              "formatter": 5
+            },
+            {
+              "columnMatch": "subscriptionId",
+              "formatter": 5
+            }
+          ],
+          "hierarchySettings": {
+            "treeType": 1,
+            "groupBy": [
+              "subscriptionName",
+              "resourceGroup"
+            ],
+            "expandTopLevel": true,
+            "finalBy": "id"
+          },
+          "labelSettings": [
+            {
+              "columnId": "id",
+              "label": "Name"
+            },
+            {
+              "columnId": "state",
+              "label": "State"
+            },
+            {
+              "columnId": "cores",
+              "label": "# Cores"
+            },
+            {
+              "columnId": "benefitsStatus",
+              "label": "Benefits"
+            },
+            {
+              "columnId": "CloudProvider",
+              "label": "Provider"
+            },
+            {
+              "columnId": "subscriptionName",
+              "label": "Subscription"
+            },
+            {
+              "columnId": "resourceGroup",
+              "label": "Resource Group"
+            },
+            {
+              "columnId": "operatingSystem",
+              "label": "OS"
+            },
+            {
+              "columnId": "location",
+              "label": "Location"
+            },
+            {
+              "columnId": "tags",
+              "label": "Tags"
+            }
+          ]
+        }
+      },
+      "name": "ListAzureArcVMs",
+      "styleSettings": {
+        "showBorder": true
+      }
+    }
+  ],
+  "fallbackResourceIds": [
+    "Azure Monitor"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
+ 
