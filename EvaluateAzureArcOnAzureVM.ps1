@@ -36,9 +36,9 @@ try {
     $ServicePrincipalId="";
     $ServicePrincipalClientSecret="";
  
-    $env:SUBSCRIPTION_ID = "18bf3718-f695-4c96-8d45-72dc2e617d2e";
+    $env:SUBSCRIPTION_ID = "";
     $env:RESOURCE_GROUP = "ARC";
-    $env:TENANT_ID = "16b3c013-d300-468d-ac64-7eda0820b6d3";
+    $env:TENANT_ID = "1";
     $env:LOCATION = "southcentralus";
     $env:AUTH_TYPE = "principal";
     $env:CORRELATION_ID = "045ab10b-5387-4e32-847d-6164f0d1e820";
