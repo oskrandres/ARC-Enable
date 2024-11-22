@@ -1,0 +1,28 @@
+Install-Module Az.ConnectedMachine
+Install-Module Az.Accounts
+Import-Module Az.ConnectedMachine
+
+# Obtener todas las suscripciones a las que tienes acceso
+$subscriptions = Get-AzSubscription
+$subscriptions # > Muestra las suscripciones
+
+Set-AzContext -SubscriptionId ""  # > Cambiar por la suscripción que se desea usar 
+
+# Define el nuevo Workspace ID
+$newWorkspaceResourceId = ""  # > Aca va el nuevo Workspace ID en formato JSON View
+
+$sqlServer = Get-AzConnectedMachine -ResourceGroupName $resourceGroupName -Name $sqlServerName 
+$sqlServer.Resource.Setting
+
+# Convert the JSON string in $sqlServer.Resource.Setting to a PowerShell object
+$settingsJson = $sqlServer.Resource.Setting
+$settings = $settingsJson | ConvertFrom-Json
+
+# Extract the WorkspaceResourceId
+$workspaceResourceId = $settings.AssessmentSettings.WorkspaceResourceId
+
+# Actualizar el Workspace ID en la configuración
+$workspaceResourceId = $newWorkspaceResourceId
+
+# Aplicar los cambios
+Update-AzConnectedMachine -ResourceGroupName $resourceGroupName -Name $sqlServerName
