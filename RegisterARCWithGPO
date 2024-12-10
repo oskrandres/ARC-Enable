@@ -1,0 +1,30 @@
+$ServicePrincipalId="";
+$ServicePrincipalClientSecret="a";
+$OU="OU=Servers,DC=oscarmed,DC=loc"
+$DN="CN=ServerOnPrem,OU=Azure,DC=oscarmed,DC=loc"
+
+$tags = @{
+    Datacenter = ''
+    City = ''
+    Ambiente ='Desarrollo'
+    nube ='On Premise'
+    DuenoServicio ='Windows Operaciones'
+    ResponsablePago =''
+    Proyecto ='Azure ARC'
+}
+
+# Obtener los objetos dentro de la OU que coincidan con el DN proporcionado
+$objects = Get-ADObject -Filter "DistinguishedName -eq '$DN'"
+
+if ($objects) {
+    foreach ($object in $objects) {
+        # Aplicar la política al objeto
+        # Aquí iría el código para aplicar la política al objeto
+        Write-Output "Aplicando política a $($object.DistinguishedName)"
+    }
+
+    # Ejecutar el script DeployGPO.ps1 si se encontraron objetos
+    .\DeployGPO.ps1 -DomainFQDN oscarmed.loc -ReportServerFQDN "domain.oscarmed.loc" -ArcRemoteShare Users\oscarmed\Documents\ARC -ServicePrincipalSecret $ServicePrincipalClientSecret -ServicePrincipalClientId $ServicePrincipalId -SubscriptionId xxxxxxxx -ResourceGroup ARC -Location canadacentral -TenantId xxx -AgentProxy http://10.10.0.5:8888 -Tags $tags
+} else {
+    Write-Output "No se encontraron objetos que coincidan con el DistinguishedName especificado."
+}
