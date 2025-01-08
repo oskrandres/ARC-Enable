@@ -2,12 +2,13 @@ resources
 | where type == 'microsoft.azurearcdata/sqlserverinstances'
 | extend Version = properties.version
 | extend Edition = properties.edition
+| extend vCore = tostring(properties.vCore)
 | extend lastInventoryTime = properties.lastInventoryUploadTime
 | extend howlongago = round(((now() - lastInventoryTime) / 1m),0)
 | extend containerId = tolower(tostring (properties.containerResourceId))
 | where Edition in ("Enterprise", "Standard")
 | where isnotempty(containerId)
-| project containerId, SQL_instance = name, Version, Edition, lastInventoryTime,howlongago
+| project containerId, SQL_instance = name, Version, Edition, vCore, lastInventoryTime,howlongago
 | join kind=inner (
     resources
     | where type == "microsoft.hybridcompute/machines"
