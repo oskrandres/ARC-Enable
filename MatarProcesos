@@ -1,0 +1,25 @@
+ # Ruta que quieres buscar
+$ruta = "C:\Packages\Plugins"
+
+# Obtener procesos que coincidan con la ruta
+$procesos = Get-CimInstance Win32_Process | Where-Object {
+    $_.ExecutablePath -like "$ruta*"
+}
+
+# Mostrar procesos encontrados
+if ($procesos) {
+    Write-Host "Procesos encontrados en la ruta $ruta `n"
+    $procesos | Select-Object ProcessId, Name, ExecutablePath | Format-Table -AutoSize
+
+    # Confirmar antes de matar
+    foreach ($proceso in $procesos) {
+        try {
+            Stop-Process -Id $proceso.ProcessId -Force -ErrorAction Stop
+            Write-Host "Proceso $($proceso.Name) (PID: $($proceso.ProcessId)) terminado."
+        } catch {
+            Write-Warning "No se pudo terminar el proceso $($proceso.Name) (PID: $($proceso.ProcessId)): $_"
+        }
+    }
+} else {
+    Write-Host "No se encontraron procesos en la ruta especificada."
+} 
