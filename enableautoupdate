@@ -1,0 +1,14 @@
+$machines = Get-AzResource -ResourceGroupName "rg-arc" -ResourceType "Microsoft.HybridCompute/machines"
+foreach ($m in $machines) {
+    Write-Host "Updating $($m.Name)..."
+    $params = @{
+      ResourceGroupName    = $m.ResourceGroupName
+      ResourceProviderName = "Microsoft.HybridCompute"
+      ResourceType         = "Machines"
+      ApiVersion           = "2024-05-20-preview"
+      Name                 = $m.Name
+      Method               = "PATCH"
+      Payload              = '{"properties":{"agentUpgrade":{ "enableAutomaticUpgrade":true}}}'
+    }
+    Invoke-AzRestMethod @params
+}
