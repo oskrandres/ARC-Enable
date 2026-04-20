@@ -1,0 +1,16 @@
+Resources
+| where type == "microsoft.hybridcompute/machines"
+| extend nics = properties.networkProfile.networkInterfaces
+| mv-expand nic = nics to typeof(dynamic)
+| mv-expand ip = nic.ipAddresses to typeof(dynamic)
+| project
+    arcId = id,
+    arcName = name,
+    rg = resourceGroup,
+    subscriptionId,
+    nicName = tostring(nic.name),
+    mac = tostring(nic.macAddress),
+    ip = tostring(ip.address),
+    ipVersion = tostring(ip.ipAddressVersion),
+    prefix = tostring(ip.subnet.addressPrefix)
+| order by arcName asc
